@@ -3,9 +3,11 @@ import time
 import bluetooth._bluetooth as bluez
 import commands
 import MySQLdb
+import sys
 
 dev_id = 0
 beacon_data_old = []
+args = sys.argv
 
 SERVER = args[1]
 DATABASE = args[2]
@@ -13,7 +15,7 @@ USER = args[3]
 PASS = args[4]
 HOSTNAME = args[5]
 
-connector = MySQLdb.connect(host=SERVER ,db=DATABASE ,user=USER ,passwd=PASS ,charset='utf8')
+connector = MySQLdb.connect(host=SERVER ,db=DATABASE ,port=3307 ,user=USER ,passwd=PASS ,charset='utf8')
 cursor = connector.cursor()
 
 
