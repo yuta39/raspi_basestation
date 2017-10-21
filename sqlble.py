@@ -53,7 +53,7 @@ if __name__ == "__main__":
                     print "----------"
                     commit_database(returnedList,cursor,connector)
 
-            except OperationalError:
+            except MySQLdb.OperationalError:
                     commands.getoutput("/home/pi/work/bluetooth/iBeacon-Scanner-/ressh.sh")
                     cursor,connector = init()
                     print("re-commit")
