@@ -15,37 +15,48 @@ USER = args[3]
 PASS = args[4]
 HOSTNAME = args[5]
 
-connector = MySQLdb.connect(host=SERVER ,db=DATABASE ,port=3307 ,user=USER ,passwd=PASS ,charset='utf8')
-cursor = connector.cursor()
 
 
-try:
-        sock = bluez.hci_open_dev(dev_id)
-        print "ble thread started"
+def init():
+    connector = MySQLdb.connect(host=SERVER ,db=DATABASE ,port=3307 ,user=USER ,passwd=PASS ,charset='utf8')
+    cursor = connector.cursor()
+    return cursor,connector
 
-except:
-        print "error accessing bluetooth device..."
-        sys.exit(1)
+def commit_database(returnedList,cursor,connector):
+    for beacon in returnedList:
+            beacon_split = beacon.split(",")
+            KEY_MAC = beacon_split[0]
+            RSSI = int(beacon_split[5])
+            DATE = time.strftime('%Y-%m-%d %H:%M:%S')
+            insert_line = 'insert into wiss_data_2017.total_key_table(key_mac,rssi,base_station_hostname,date) values("%s","%d","%s","%s")' % (KEY_MAC,RSSI,HOSTNAME,DATE)
+            print insert_line
+            cursor.execute(insert_line)
+    connector.commit()
 
-blescan.hci_le_set_scan_parameters(sock)
-blescan.hci_enable_le_scan(sock)
 
-while True:
-        try:
-                returnedList = blescan.parse_events(sock, 10)
-                print "----------"
-                for beacon in returnedList:
-                        beacon_split = beacon.split(",")
-                        KEY_MAC = beacon_split[0]
-                        RSSI = int(beacon_split[5])
-                        DATE = time.strftime('%Y-%m-%d %H:%M:%S')
-                        insert_line = 'insert into wiss_data_2017.total_key_table(key_mac,rssi,base_station_hostname,date) values("%s","%d","%s","%s")' % (KEY_MAC,RSSI,HOSTNAME,DATE)
-                        print insert_line
-                        cursor.execute(insert_line)
+if __name__ == "__main__":
+    cursor,connector = init()
+    try:
+            sock = bluez.hci_open_dev(dev_id)
+            print "ble thread started"
 
-                connector.commit()
-                time.sleep(5)
+    except:
+            print "error accessing bluetooth device..."
+            sys.exit(1)
 
-        except OperationalError:
-                commands.getoutput("/home/pi/work/bluetooth/iBeacon-Scanner-/ressh.sh")
+    blescan.hci_le_set_scan_parameters(sock)
+    blescan.hci_enable_le_scan(sock)
 
+    while True:
+            try:
+                    returnedList = blescan.parse_events(sock, 10)
+                    print "----------"
+                    commit_database(returnedList,cursor,connector)
+
+            except OperationalError:
+                    commands.getoutput("/home/pi/work/bluetooth/iBeacon-Scanner-/ressh.sh")
+                    cursor,connector = init()
+                    print("re-commit")
+                    commit_database(returnedList,cursor,connector)
+
+            time.sleep(5)
