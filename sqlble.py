@@ -52,7 +52,6 @@ if __name__ == "__main__":
                     returnedList = blescan.parse_events(sock, 10)
                     print "----------"
                     commit_database(returnedList,cursor,connector)
-
             except MySQLdb.OperationalError:
                     commands.getoutput("/home/pi/work/bluetooth/iBeacon-Scanner-/ressh.sh")
                     cursor,connector = init()
