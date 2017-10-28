@@ -4,6 +4,7 @@ import bluetooth._bluetooth as bluez
 import commands
 import MySQLdb
 import sys
+import os
 
 dev_id = 0
 beacon_data_old = []
@@ -36,6 +37,7 @@ def commit_database(returnedList,cursor,connector):
 
 if __name__ == "__main__":
     cursor,connector = init()
+    returnedList = []
     try:
             sock = bluez.hci_open_dev(dev_id)
             print "ble thread started"
@@ -53,7 +55,7 @@ if __name__ == "__main__":
                     print "----------"
                     commit_database(returnedList,cursor,connector)
             except MySQLdb.OperationalError:
-                    commands.getoutput("/home/pi/work/bluetooth/iBeacon-Scanner-/ressh.sh")
+                    os.system("/home/pi/work/bluetooth/iBeacon-Scanner-/ressh.sh")
                     cursor,connector = init()
                     print("re-commit")
                     commit_database(returnedList,cursor,connector)
