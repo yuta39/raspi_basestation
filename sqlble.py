@@ -5,6 +5,7 @@ import commands
 import MySQLdb
 import sys
 import os
+import pings
 
 dev_id = 0
 beacon_data_old = []
@@ -16,12 +17,23 @@ USER = args[3]
 PASS = args[4]
 HOSTNAME = args[5]
 
+p = pings.Ping()
+
 
 
 def init():
-    connector = MySQLdb.connect(host=SERVER ,db=DATABASE ,port=3307 ,user=USER ,passwd=PASS ,charset='utf8')
+    connector = MySQLdb.connect(host=SERVER ,db=DATABASE ,port=54321 ,user=USER ,passwd=PASS ,charset='utf8')
     cursor = connector.cursor()
     return cursor,connector
+
+def wait():
+    while True:
+        print "wait..."
+        time.sleep(5)
+        res = p.ping("google.com")
+        if res.is_reached():
+            break
+
 
 def commit_database(returnedList,cursor,connector):
     for beacon in returnedList:
@@ -32,6 +44,9 @@ def commit_database(returnedList,cursor,connector):
             insert_line = 'insert into wiss_data_2017.total_key_table(key_mac,rssi,base_station_hostname,date) values("%s","%d","%s","%s")' % (KEY_MAC,RSSI,HOSTNAME,DATE)
             print insert_line
             cursor.execute(insert_line)
+    res = p.ping("google.com")
+    if not res.is_reached():
+        wait()
     connector.commit()
 
 
@@ -60,4 +75,4 @@ if __name__ == "__main__":
                     print("re-commit")
                     commit_database(returnedList,cursor,connector)
 
-            time.sleep(5)
+            #time.sleep(5)
